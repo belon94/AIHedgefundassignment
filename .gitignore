@@ -2,6 +2,4 @@ __pycache__/
 *.pyc
 .venv/
 .ipynb_checkpoints/
-data/raw/*.csv
-data/processed/*.csv
 .DS_Store

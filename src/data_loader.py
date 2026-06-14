@@ -95,6 +95,37 @@ def save_and_split(df: pd.DataFrame, symbol: str) -> None:
     test.to_csv(PROCESSED_DIR / f"{safe_name}_test.csv")
 
 
+def load_symbol(symbol: str, split: str = "full") -> pd.DataFrame:
+    """Load saved OHLCV data for `symbol` ("BTC/USDT" or "BTC_USDT").
+
+    `split` is one of "full" (raw history), "train" or "test".
+    """
+    safe_name = symbol.replace("/", "_")
+
+    if split == "full":
+        path = RAW_DIR / f"{safe_name}.csv"
+    elif split in ("train", "test"):
+        path = PROCESSED_DIR / f"{safe_name}_{split}.csv"
+    else:
+        raise ValueError(f"split must be 'full', 'train' or 'test', got {split!r}")
+
+    df = pd.read_csv(path, index_col="timestamp", parse_dates=True)
+    return df
+
+
+def load_close_prices(symbols: list[str], split: str = "full") -> pd.DataFrame:
+    """Load close prices for several symbols into one DataFrame (columns = symbols)."""
+    closes = {symbol: load_symbol(symbol, split)["close"] for symbol in symbols}
+    return pd.DataFrame(closes)
+
+
+def available_symbols() -> list[str]:
+    """List all symbols with downloaded raw data, e.g. ["BTC/USDT", ...]."""
+    return sorted(
+        path.stem.replace("_", "/", 1) for path in RAW_DIR.glob("*.csv")
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Download OHLCV data from Binance via ccxt")
     parser.add_argument("--top", type=int, default=120, help="Number of top symbols by quote volume to download")
